@@ -18,7 +18,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
-import { ChevronRight, MessageSquare, SlidersHorizontal, X, TrendingUp, Target, Lightbulb, Sparkles } from "lucide-react";
+import { ChevronRight, MessageSquare, SlidersHorizontal, X, Target, Lightbulb, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import { isImpersonating } from "@/lib/impersonation";
@@ -27,7 +27,6 @@ import MorningCheckIn from "@/components/checkin/MorningCheckIn";
 import EveningCheckIn from "@/components/checkin/EveningCheckIn";
 import MiddayPriorityLoop from "@/components/checkin/MiddayPriorityLoop";
 import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection";
-import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
@@ -35,10 +34,6 @@ import TalentScorecard from "@/components/lead/TalentScoreCard";
 import TeamOverviewSection from "@/components/team/TeamOverviewSection";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
 import { useActiveClientId } from "@/components/contexts/ClientContext";
-
-// Patterns imports
-import LeadershipNarrativeCard from "@/components/patterns/LeadershipNarrativeCard";
-import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 
 // Density + preset
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
@@ -456,6 +451,8 @@ export default function ManagerToday() {
           pendingDecisions={pendingDecisions}
           topPattern={topPattern}
           crossToolData={crossToolData}
+          insight={insight}
+          hasInAppPatterns={inAppPatternsForCrossTool.length > 0}
           onDecisionCommitted={refetchDecisions}
           onDecisionOutcomeSaved={async () => { await refetchDecisions(); }}
           onOpenAtreus={openAtreus}
@@ -554,7 +551,7 @@ export default function ManagerToday() {
         onSettingsClick={() => setShowSettings(s => !s)}
       />
 
-      {/* ── Main grid: Rhythm (left) | Scorecard + Patterns + Reflect (right) ── */}
+      {/* ── Main grid: Rhythm + Playbook (left) | Scorecard + Reflect (right) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
         <div className="space-y-4">
           {rhythmContent}
@@ -562,43 +559,6 @@ export default function ManagerToday() {
 
         <div className="space-y-4">
           <TalentScorecard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-          <ZoneCard
-            title="Patterns"
-            icon={TrendingUp}
-            iconColor="text-[var(--ld-accent)]"
-            accentColor="#e6843c"
-            collapsible
-            defaultExpanded
-          >
-            {crossToolData ? (
-              <TopPatternsMoveCard
-                crossToolData={crossToolData}
-                onOpenAtreus={openAtreus}
-                onDecisionCommitted={refetchDecisions}
-                pendingDecisions={pendingDecisions}
-              />
-            ) : inAppPatternsForCrossTool.length === 0 ? (
-              // Nothing has been lived in yet: a new manager has no signals to
-              // read, so the zone says so instead of spinning indefinitely.
-              <div className="bg-card border border-border rounded-2xl px-5 py-6 text-center">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Top 3 Patterns</p>
-                <p className="text-sm font-medium text-foreground">Nothing to read yet</p>
-                <p className="text-xs text-muted-foreground leading-relaxed mt-1 max-w-xs mx-auto">
-                  Patterns come from your check-ins and the work you log. A few days of rhythm and this fills in on its own.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-card border border-border rounded-2xl px-5 py-4">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Top 3 Patterns</p>
-                <div className="flex items-center justify-center py-4">
-                  <div className="w-5 h-5 border-2 border-slate-200 border-t-[#0202ff] rounded-full animate-spin" />
-                </div>
-              </div>
-            )}
-            <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
-            <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
-          </ZoneCard>
-
           <ZoneCard
             title="Reflect"
             icon={Lightbulb}

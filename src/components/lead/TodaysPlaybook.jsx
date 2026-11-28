@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import Big3QuickSet from "@/components/lead/Big3QuickSet";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
+import PlaybookInsights from "@/components/lead/PlaybookInsights";
 import { toast } from "sonner";
 
 // ─── Big 3 item with status toggle ───────────────────────────────────────────
@@ -171,7 +172,7 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], topPattern, crossToolData, onDecisionCommitted, onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail, isMorningWindow }) {
+export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], topPattern, crossToolData, insight, hasInAppPatterns = false, onDecisionCommitted, onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail, isMorningWindow }) {
   const [loopExpanded, setLoopExpanded] = useState(() => {
     try { const s = localStorage.getItem("cl_collapse_playbook_loop"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
   });
@@ -282,6 +283,19 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
             )}
           </div>
         )}
+
+        {/* ── Patterns & narrative: the read that closes the playbook ── */}
+        <PlaybookInsights
+          crossToolData={crossToolData}
+          hasInAppPatterns={hasInAppPatterns}
+          trends={trends}
+          insight={insight}
+          goals={goals}
+          pulses={pulses}
+          pendingDecisions={pendingDecisions}
+          onOpenAtreus={onOpenAtreus}
+          onDecisionCommitted={onDecisionCommitted}
+        />
       </div>
       )}
     </div>
