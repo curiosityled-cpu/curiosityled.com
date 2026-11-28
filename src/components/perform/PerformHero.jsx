@@ -1,58 +1,78 @@
 /**
- * PerformHero — the Perform page masthead.
- * Same hero rhythm as Lead and the former Team page: date label, the page name,
- * the scope being read, and a refresh control over an animated backdrop.
+ * PerformHero — the Perform masthead.
+ *
+ * Same hero band as the Develop header: today's date, a personal headline, the
+ * scope in one line, the space label as a pill, and the live counts on the
+ * right, with Refresh in the top corner.
  */
 import React from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Sparkles } from "lucide-react";
 import TeamPulseOverlay from "@/components/team/TeamPulseOverlay";
 
 const HERO_IMAGE = "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/741bf3823_generated_image.png";
 
-export default function PerformHero({ subtitle, signal, isFetching, onRefresh }) {
-  const day = new Date().toLocaleDateString("en-US", {
-    timeZone: "America/New_York",
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+export default function PerformHero({ firstName, description, stats = [], isFetching, onRefresh }) {
+  const today = new Date()
+    .toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+    .toUpperCase();
 
   return (
-    <div className="relative rounded-2xl overflow-hidden mb-5 shadow-lg" style={{ minHeight: "180px" }}>
-      <div className="absolute inset-0" style={{ animation: "hero-breathe 22s ease-in-out infinite" }}>
-        <img src={HERO_IMAGE} alt="" className="w-full h-full object-cover" />
+    <section className="relative mb-5 overflow-hidden rounded-2xl shadow-lg" style={{ minHeight: "210px" }}>
+      <div
+        className="absolute inset-0"
+        style={{ animation: "practice-breathe 22s ease-in-out infinite" }}
+      >
+        <img src={HERO_IMAGE} alt="" className="h-full w-full object-cover" />
       </div>
-
-      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/30 to-transparent" />
-
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/20" />
       <TeamPulseOverlay />
 
       {onRefresh && (
         <button
+          type="button"
           onClick={onRefresh}
-          className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-white/80 hover:text-white hover:bg-white/25 transition-colors text-xs font-medium"
+          className="absolute right-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/15 px-3 py-1.5 text-xs font-medium text-white/85 backdrop-blur-sm transition-colors hover:bg-white/25 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
-          <span className="hidden sm:inline">Refresh</span>
+          <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
+          Refresh
         </button>
       )}
 
-      <div className="relative z-10 px-6 py-5 flex flex-col justify-end" style={{ minHeight: "180px" }}>
-        <p className="text-[10px] font-semibold text-white/70 uppercase tracking-widest mb-1">{day}</p>
-        <h1
-          className="text-2xl font-bold text-white tracking-tight"
-          style={{ fontSize: "clamp(1.5rem, 2.5vw, 2.25rem)" }}
-        >
-          Perform
-        </h1>
-        {subtitle && <p className="mt-1 text-sm text-white/80 max-w-xl leading-snug">{subtitle}</p>}
-        {signal ? (
-          <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 text-white border border-white/20 text-xs font-medium backdrop-blur-sm max-w-lg">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
-            <span className="line-clamp-2 leading-snug">{signal}</span>
+      <div className="relative z-10 flex min-h-[210px] flex-col justify-end px-6 py-5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/70">
+          {today}
+        </p>
+
+        <div className="mt-1.5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+          <div className="min-w-0">
+            <h1 className="max-w-[620px] text-[26px] font-extrabold leading-[1.05] tracking-[-0.02em] text-white sm:text-[34px]">
+              {firstName ? `Here's what needs you, ${firstName}` : "Here's what needs you"}
+            </h1>
+            <p className="mt-2 max-w-[520px] text-[13px] leading-[1.55] text-white/70">
+              {description}
+            </p>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white backdrop-blur-sm">
+              <Sparkles className="h-3 w-3 flex-shrink-0 text-amber-300" />
+              Your Performance Space
+            </div>
           </div>
-        ) : null}
+
+          <div className="flex flex-shrink-0 items-end gap-5 pb-0.5">
+            <dl className="flex items-end gap-4">
+              {stats.map((stat) => (
+                <div key={stat.label} className="text-right">
+                  <dd className="text-[20px] font-extrabold leading-none text-white">
+                    {stat.value}
+                  </dd>
+                  <dt className="mt-1 text-[9px] font-medium uppercase tracking-[0.1em] text-white/60">
+                    {stat.label}
+                  </dt>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

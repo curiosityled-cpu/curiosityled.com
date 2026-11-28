@@ -238,17 +238,27 @@ export default function Perform() {
   }, [rollup]);
 
   const scopeSize = rollup?.scope_size || 0;
-  const subtitle =
+  const description =
     activeScope === "my"
       ? "Your own reviews, check-ins and goals — what needs you today."
       : `${rollup?.scope_label || "Your team"} · ${scopeSize} ${
           scopeSize === 1 ? "person" : "people"
-        } in scope`;
+        } in scope.`;
 
-  const signal =
-    !loading && items.length > 0
-      ? `${items.length} ${items.length === 1 ? "thing" : "things"} need you`
-      : null;
+  const rawName = user?.display_name || user?.data?.display_name || user?.full_name;
+  const firstName =
+    rawName && rawName.trim() && !rawName.includes("@") ? rawName.split(" ")[0] : null;
+
+  const heroStats =
+    activeScope === "my"
+      ? [
+          { label: "To act on", value: items.length },
+          { label: "Goals", value: goals.length },
+        ]
+      : [
+          { label: "To act on", value: items.length },
+          { label: "People", value: scopeSize },
+        ];
 
   const attentionDescription =
     activeScope === "my"
@@ -288,8 +298,9 @@ export default function Perform() {
     <div className="min-h-screen">
       <div className="mx-auto max-w-6xl px-4 py-6">
         <PerformHero
-          subtitle={subtitle}
-          signal={signal}
+          firstName={firstName}
+          description={description}
+          stats={heroStats}
           isFetching={reviewFetching || rollupFetching}
           onRefresh={refetchAll}
         />
