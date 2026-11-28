@@ -67,12 +67,12 @@ export const getFriendlyRoleLabel = (appRole) => {
 const NAV_CONFIG = {
   manager: [
   { label: 'Lead', path: '/today', icon: Home },
-  { label: 'Team', path: '/team', icon: Users },
+  { label: 'Perform', path: '/team', icon: Target },
   { label: 'Develop', path: '/my-development', icon: Dumbbell }],
 
   buyer: [
   { label: 'Lead', path: '/today', icon: Home },
-  { label: 'Team', path: '/team', icon: Users },
+  { label: 'Perform', path: '/team', icon: Target },
   { label: 'Develop', path: '/my-development', icon: Dumbbell },
   { label: 'Administration', icon: FolderOpen, group: true, children: [
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
@@ -85,18 +85,18 @@ const NAV_CONFIG = {
 
   analyst: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
-  { label: 'Team', path: '/team', icon: Users },
+  { label: 'Perform', path: '/team', icon: Target },
   { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
   { label: 'Report Manager', path: '/report-builder-mvp', icon: BarChart2 }],
 
   executive: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
-  { label: 'Team', path: '/team', icon: Users },
+  { label: 'Perform', path: '/team', icon: Target },
   { label: 'Report Manager', path: '/report-builder-mvp', icon: BarChart2 }],
 
   hrbp: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
-  { label: 'My Portfolio', path: '/team', icon: Users },
+  { label: 'Perform', path: '/team', icon: Target },
   { label: 'Report Manager', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };

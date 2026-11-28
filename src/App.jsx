@@ -69,7 +69,7 @@ import MyRhythm from './pages/MyRhythm';
 import ManagerToday from './pages/ManagerToday';
 import ManagerPatterns from './pages/ManagerPatterns';
 import ManagerGrowth from './pages/ManagerGrowth';
-import ManagerTeam from './pages/ManagerTeam';
+import Perform from './pages/Perform';
 import ManagerAtreus from './pages/ManagerAtreus';
 import OneOnOneHub from './pages/OneOnOneHub';
 import DelegationPlanner from './pages/DelegationPlanner';
@@ -211,7 +211,7 @@ const AuthenticatedApp = () => {
       <Route path="/portfolio" element={<Navigate to="/Insights" replace />} />
       <Route path="/patterns" element={<Navigate to="/today" replace />} />
       <Route path="/growth" element={<Navigate to="/practice" replace />} />
-      <Route path="/team" element={<MVPLayout><ManagerTeam /></MVPLayout>} />
+      <Route path="/team" element={<MVPLayout><Perform /></MVPLayout>} />
       <Route path="/atreus-guide" element={<MVPLayout><ManagerAtreus /></MVPLayout>} />
       <Route path="/practice" element={<Navigate to="/my-development" replace />} />
       <Route path="/one-on-ones" element={<MVPLayout><OneOnOneHub /></MVPLayout>} />
