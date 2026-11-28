@@ -16,7 +16,6 @@ import LeadSection from "@/components/lead/ui/LeadSection";
 import PerformHero from "@/components/perform/PerformHero";
 import ScopeSwitcher from "@/components/perform/ScopeSwitcher";
 import AttentionList from "@/components/perform/AttentionList";
-import OutcomeTiles from "@/components/perform/OutcomeTiles";
 import MyGoalsCard from "@/components/perform/MyGoalsCard";
 import PeopleList from "@/components/perform/PeopleList";
 import {
@@ -247,10 +246,7 @@ export default function Perform() {
 
   const heroStats =
     activeScope === "my"
-      ? [
-          { label: "To act on", value: items.length },
-          { label: "Goals", value: goals.length },
-        ]
+      ? [{ label: "To act on", value: items.length }]
       : [
           { label: "To act on", value: items.length },
           { label: "People", value: scopeSize },
@@ -296,6 +292,7 @@ export default function Perform() {
         <PerformHero
           description={description}
           stats={heroStats}
+          tiles={activeScope === "my" ? myWeekTiles : outcomeTiles}
           isFetching={reviewFetching || rollupFetching}
           onRefresh={refetchAll}
         />
@@ -303,10 +300,8 @@ export default function Perform() {
         <ScopeSwitcher scopes={scopes} value={activeScope} onChange={chooseScope} />
 
         <div className="space-y-6">
-          <LeadSection label={contextLabel} description={contextDescription}>
-            {activeScope === "my" ? (
-              <OutcomeTiles tiles={myWeekTiles} />
-            ) : (
+          {activeScope !== "my" && (
+            <LeadSection label={contextLabel} description={contextDescription}>
               <PeopleList
                 people={people}
                 emptyTitle={
@@ -323,8 +318,8 @@ export default function Perform() {
                     : { label: "Open Leadership Intelligence", to: "/Insights?tab=org" }
                 }
               />
-            )}
-          </LeadSection>
+            </LeadSection>
+          )}
 
           <div
             className={
@@ -340,21 +335,15 @@ export default function Perform() {
               />
             </LeadSection>
 
-            <LeadSection
-              label="Goals & outcomes"
-              collapsible
-              description={
-                activeScope === "my"
-                  ? "What you're working towards, and where it stands."
-                  : "How goals and check-ins are moving across this scope."
-              }
-            >
-              {activeScope === "my" ? (
+            {activeScope === "my" && (
+              <LeadSection
+                label="Goals & outcomes"
+                collapsible
+                description="What you're working towards, and where it stands."
+              >
                 <MyGoalsCard goals={goals} kpis={kpis} />
-              ) : (
-                <OutcomeTiles tiles={outcomeTiles} />
-              )}
-            </LeadSection>
+              </LeadSection>
+            )}
           </div>
         </div>
       </div>

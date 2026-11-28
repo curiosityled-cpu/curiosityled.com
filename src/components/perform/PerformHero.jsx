@@ -11,7 +11,7 @@ import TeamPulseOverlay from "@/components/team/TeamPulseOverlay";
 
 const HERO_IMAGE = "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/741bf3823_generated_image.png";
 
-export default function PerformHero({ description, stats = [], isFetching, onRefresh }) {
+export default function PerformHero({ description, stats = [], tiles = [], isFetching, onRefresh }) {
   const today = new Date()
     .toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
     .toUpperCase();
@@ -72,6 +72,27 @@ export default function PerformHero({ description, stats = [], isFetching, onRef
             </dl>
           </div>
         </div>
+
+        {tiles.length > 0 && (
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {tiles.map((tile) => (
+              <div
+                key={tile.label}
+                className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-sm"
+              >
+                <p className="text-[9px] font-medium uppercase tracking-[0.1em] text-white/60">
+                  {tile.label}
+                </p>
+                <p className="mt-1 text-[18px] font-extrabold leading-none text-white">
+                  {tile.value}
+                </p>
+                {tile.hint && (
+                  <p className="mt-1 text-[10px] leading-tight text-white/60">{tile.hint}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
