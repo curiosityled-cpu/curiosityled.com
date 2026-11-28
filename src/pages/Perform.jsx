@@ -308,7 +308,7 @@ export default function Perform() {
               activeScope === "my" ? "grid items-start gap-6 lg:grid-cols-2" : "space-y-6"
             }
           >
-            <LeadSection label="Needs attention" description={attentionDescription}>
+            <LeadSection label="Needs attention" description={attentionDescription} collapsible>
               <AttentionList
                 items={items}
                 loading={loading}
@@ -319,6 +319,7 @@ export default function Perform() {
 
             <LeadSection
               label="Goals & outcomes"
+              collapsible
               description={
                 activeScope === "my"
                   ? "What you're working towards, and where it stands."
