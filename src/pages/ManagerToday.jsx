@@ -336,7 +336,11 @@ export default function ManagerToday() {
     queryFn: async () => {
       try {
         const scope = activeClientId ? { client_id: activeClientId } : {};
-        return await base44.entities.KPI.filter({ ...scope, owner_email: user.email, status: "active" }, "-updated_date", 10);
+        const mine = await base44.entities.KPI.filter({ ...scope, owner_email: user.email, status: "active" }, "-updated_date", 10);
+        if (mine.length > 0) return mine;
+        // No KPIs of their own: read the shared KPIs the organisation is steering by,
+        // so the scorecard shows real measures instead of an empty KPI section.
+        return await base44.entities.KPI.filter({ ...scope, visibility: "shared", status: "active" }, "-updated_date", 10);
       } catch { return []; }
     },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
