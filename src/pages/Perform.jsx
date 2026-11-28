@@ -245,10 +245,6 @@ export default function Perform() {
           scopeSize === 1 ? "person" : "people"
         } in scope.`;
 
-  const rawName = user?.display_name || user?.data?.display_name || user?.full_name;
-  const firstName =
-    rawName && rawName.trim() && !rawName.includes("@") ? rawName.split(" ")[0] : null;
-
   const heroStats =
     activeScope === "my"
       ? [
@@ -298,7 +294,6 @@ export default function Perform() {
     <div className="min-h-screen">
       <div className="mx-auto max-w-6xl px-4 py-6">
         <PerformHero
-          firstName={firstName}
           description={description}
           stats={heroStats}
           isFetching={reviewFetching || rollupFetching}

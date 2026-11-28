@@ -11,7 +11,7 @@ import TeamPulseOverlay from "@/components/team/TeamPulseOverlay";
 
 const HERO_IMAGE = "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/741bf3823_generated_image.png";
 
-export default function PerformHero({ firstName, description, stats = [], isFetching, onRefresh }) {
+export default function PerformHero({ description, stats = [], isFetching, onRefresh }) {
   const today = new Date()
     .toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
     .toUpperCase();
@@ -46,7 +46,7 @@ export default function PerformHero({ firstName, description, stats = [], isFetc
         <div className="mt-1.5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
           <div className="min-w-0">
             <h1 className="max-w-[620px] text-[26px] font-extrabold leading-[1.05] tracking-[-0.02em] text-white sm:text-[34px]">
-              {firstName ? `Here's what needs you, ${firstName}` : "Here's what needs you"}
+              Performance in focus
             </h1>
             <p className="mt-2 max-w-[520px] text-[13px] leading-[1.55] text-white/70">
               {description}
