@@ -244,6 +244,12 @@ export default async function (req) {
     // renders for deep-tree leaders. Roles whose tree is empty (except User Level 2)
     // fall back to enterprise so they still see the org instead of a blank page.
     const FORCE_ENTERPRISE = ["Platform Admin", "Analyst", "Partner Business Administrator"];
+    // A screen that reads the caller's own reporting line can ask for it
+    // explicitly. The enterprise roles stay enterprise by default (they need
+    // the org to configure it), but Perform can ask for the leader's own tree
+    // so those roles get their team view too. An empty tree answers with an
+    // empty vertical scope rather than the whole enterprise.
+    const wantsTeamScope = body?.scope === "team";
     let scopeType;
     let detailLevel;
     let scopeLabel;
@@ -253,7 +259,7 @@ export default async function (req) {
       scopeType = "portfolio";
       detailLevel = "full";
       scopeLabel = "My Portfolio";
-    } else if (FORCE_ENTERPRISE.includes(role)) {
+    } else if (FORCE_ENTERPRISE.includes(role) && !wantsTeamScope) {
       scopeType = "enterprise";
       detailLevel = role === "Analyst" ? "aggregated" : "full";
       scopeLabel = "Enterprise";
@@ -261,6 +267,10 @@ export default async function (req) {
       treeEmails = buildReportingTree(allUsers, currentUser.email, 10)
         .map((u) => u.email).filter(Boolean);
       if (treeEmails.length > 0 || role === "User Level 2") {
+        scopeType = "vertical";
+        detailLevel = "directs";
+        scopeLabel = "Your Team";
+      } else if (wantsTeamScope) {
         scopeType = "vertical";
         detailLevel = "directs";
         scopeLabel = "Your Team";

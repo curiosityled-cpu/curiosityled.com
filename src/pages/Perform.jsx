@@ -67,7 +67,12 @@ export default function Perform() {
     queryKey: ["perform-rollup", user?.email, activeClientId],
     queryFn: async () => {
       try {
-        const res = await base44.functions.invoke("getTeamRollup", tenant);
+        // Ask for this person's own reporting line (or portfolio) rather than
+        // the enterprise reading: Perform is about the work that is theirs.
+        const res = await base44.functions.invoke("getTeamRollup", {
+          ...tenant,
+          scope: "team",
+        });
         return res.data;
       } catch {
         return null;
