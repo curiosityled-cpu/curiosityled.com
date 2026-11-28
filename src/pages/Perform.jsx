@@ -2,10 +2,12 @@
  * Perform — the performance workspace.
  * Route: /team (the Team page's home; the navigation label is Perform).
  *
- * One page, three scopes: My work, My team, Organization. Each scope puts the
- * work that needs a decision first, then goals and outcomes, then a concise
- * read of the context. Every action opens the route that already completes it
- * (Reviews, Lead's check-in, My Performance) — nothing is re-implemented here.
+ * One page, two scopes: My work and the leader's own tree — "My team" for a
+ * reporting line, "My portfolio" for an HRBP. The tree scope scales with the
+ * leader: at directs depth it lists individuals, above that it lists each
+ * direct rolled up across their subtree. Organization-wide reading lives in
+ * Leadership Intelligence, not here. Every action opens the route that already
+ * completes it (Reviews, Lead's check-in, My Performance).
  */
 import React, { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -17,15 +19,15 @@ import PerformHero from "@/components/perform/PerformHero";
 import ScopeSwitcher from "@/components/perform/ScopeSwitcher";
 import AttentionList from "@/components/perform/AttentionList";
 import MyGoalsCard from "@/components/perform/MyGoalsCard";
-import OrgGoalsCard from "@/components/perform/OrgGoalsCard";
 import PeopleList from "@/components/perform/PeopleList";
+import TeamRollupList from "@/components/perform/TeamRollupList";
+import CascadeStrip from "@/components/perform/CascadeStrip";
 import {
   todayKeyET,
   mondayKeyOf,
   weekStanding,
   buildMyWorkItems,
   buildTeamItems,
-  buildOrgItems,
 } from "@/lib/performItems";
 
 export default function Perform() {
@@ -139,12 +141,15 @@ export default function Perform() {
   });
 
   // ── Scopes the person may read ──
+  // Only a real reporting line or portfolio earns a second scope. Enterprise
+  // scopes (Platform Admin, Analyst, partner-wide) read the org in Leadership
+  // Intelligence, so Perform stays about the work that is theirs to act on.
   const scopes = useMemo(() => {
     const list = [{ id: "my", label: "My work" }];
     const size = rollup?.scope_size || 0;
     if (size === 0) return list;
-    if (rollup?.scope_type === "vertical") list.push({ id: "team", label: "My team" });
-    else list.push({ id: "org", label: "Organization" });
+    if (rollup?.scope_type === "vertical") list.push({ id: "tree", label: "My team" });
+    else if (rollup?.scope_type === "portfolio") list.push({ id: "tree", label: "My portfolio" });
     return list;
   }, [rollup]);
 
@@ -174,36 +179,27 @@ export default function Perform() {
 
   const activeScope = scopes.some((s) => s.id === scope) ? scope : "my";
 
-  // ── Org-wide goals and OKRs (business goals the org steers by, OKRs for the period) ──
-  const { data: orgGoals = { businessGoals: [], okrs: [] } } = useQuery({
-    queryKey: ["perform-org-goals", activeClientId],
+  // ── The organizational goals the team's work rolls up to (context only) ──
+  const { data: cascadeGoals = [] } = useQuery({
+    queryKey: ["perform-cascade-goals", activeClientId],
     queryFn: async () => {
       try {
-        const [businessGoals, okrs] = await Promise.all([
-          base44.entities.OrgBusinessGoal.filter(
-            { ...tenant, is_active: true },
-            "-created_date",
-            8
-          ),
-          base44.entities.Goal.filter(
-            { ...tenant, goal_type: "okr_objective", status: "active" },
-            "-updated_date",
-            8
-          ),
-        ]);
-        return { businessGoals, okrs };
+        return await base44.entities.OrgBusinessGoal.filter(
+          { ...tenant, is_active: true },
+          "-created_date",
+          4
+        );
       } catch {
-        return { businessGoals: [], okrs: [] };
+        return [];
       }
     },
-    enabled: !!user?.email && activeScope === "org",
+    enabled: !!user?.email && activeScope === "tree",
     staleTime: 60_000,
   });
 
   const loading = !user || reviewLoading || rollupLoading;
   const items = useMemo(() => {
-    if (activeScope === "team") return buildTeamItems({ reviewData, todayKey });
-    if (activeScope === "org") return buildOrgItems({ reviewData });
+    if (activeScope === "tree") return buildTeamItems({ reviewData, todayKey });
     return buildMyWorkItems({ reviewData, checkins: weekCheckins, goals, kpis, todayKey });
   }, [activeScope, reviewData, weekCheckins, goals, kpis, todayKey]);
 
@@ -264,6 +260,7 @@ export default function Perform() {
   }, [rollup]);
 
   const scopeSize = rollup?.scope_size || 0;
+  const teams = rollup?.subtree_cards || [];
   const description =
     activeScope === "my"
       ? "Your own reviews, check-ins and goals — what needs you today."
@@ -282,30 +279,31 @@ export default function Perform() {
   const attentionDescription =
     activeScope === "my"
       ? "Your own reviews, check-ins and goal updates, most urgent first."
-      : activeScope === "team"
-      ? "The reviews and conversations your team is waiting on."
-      : "Cycles and people that still need action this period.";
+      : "The reviews and conversations your team is waiting on.";
+
+  const treeLabel = scopes.find((s) => s.id === "tree")?.label || "My team";
+  const isPortfolio = treeLabel === "My portfolio";
 
   const emptyTitle =
     activeScope === "my"
       ? "You're clear"
-      : activeScope === "team"
-      ? "Your team is up to date"
-      : "Nothing outstanding";
+      : isPortfolio
+      ? "Your portfolio is up to date"
+      : "Your team is up to date";
 
   const emptyHint =
     activeScope === "my"
       ? "No review, check-in or goal update is waiting on you."
-      : activeScope === "team"
-      ? "No review or conversation is waiting on you right now."
-      : "Every review cycle in this scope is on track.";
+      : "No review or conversation is waiting on you right now.";
 
   const contextLabel =
-    activeScope === "my" ? "Your week" : activeScope === "team" ? "Team context" : "Organization context";
+    activeScope === "my" ? "Your week" : isPortfolio ? "Portfolio context" : "Team context";
 
   const contextDescription =
     activeScope === "my"
       ? "How your own check-ins and workload stand this week."
+      : teams.length > 0
+      ? "Your direct reports, each rolled up across the people they lead."
       : "Who is in scope, and who needs a conversation first.";
 
   const refetchAll = () => {
@@ -346,40 +344,20 @@ export default function Perform() {
             </LeadSection>
           ) : (
             <div className="space-y-6">
-              {activeScope === "org" && (
-                <LeadSection
-                  label="Goals & outcomes"
-                  collapsible
-                  description="The goals, OKRs and KPIs the organization is steering by."
-                >
-                  <OrgGoalsCard
-                    businessGoals={orgGoals.businessGoals}
-                    okrs={orgGoals.okrs}
-                    kpis={rollup?.aggregates?.kpis || []}
-                  />
-                </LeadSection>
-              )}
-
               <LeadSection label={contextLabel} description={contextDescription}>
-                <PeopleList
-                  people={people}
-                  emptyTitle={
-                    activeScope === "team"
-                      ? "No one in your team yet"
-                      : "No individual records in scope"
-                  }
-                  emptyHint={
-                    activeScope === "team"
-                      ? "When people report to you, their goals and check-ins appear here."
-                      : "This scope shows organization-wide totals for now."
-                  }
-                  footer={
-                    activeScope === "team"
-                      ? { label: "Open the review cycle", to: "/reviews" }
-                      : { label: "Open Leadership Intelligence", to: "/Insights?tab=org" }
-                  }
-                />
+                {teams.length > 0 ? (
+                  <TeamRollupList teams={teams} />
+                ) : (
+                  <PeopleList
+                    people={people}
+                    emptyTitle="No one in your team yet"
+                    emptyHint="When people report to you, their goals and check-ins appear here."
+                    footer={{ label: "Open the review cycle", to: "/reviews" }}
+                  />
+                )}
               </LeadSection>
+
+              <CascadeStrip goals={cascadeGoals} />
             </div>
           )}
         </div>
