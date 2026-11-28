@@ -144,7 +144,7 @@ export function buildMyWorkItems({ reviewData, checkins, goals, kpis, todayKey }
       title: `Catch up on ${missed.length} missed check-in${missed.length === 1 ? "" : "s"}`,
       meta: "Days this week without a check-in",
       tone: "overdue",
-      to: "/my-rhythm",
+      to: "/my-checkins",
     });
   }
 

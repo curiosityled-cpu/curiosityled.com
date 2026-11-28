@@ -23,7 +23,7 @@ export default function ScopeSwitcher({ scopes = [], value, onChange }) {
             onClick={() => onChange(scope.id)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
               active
-                ? "bg-[var(--ld-accent)] text-white shadow-sm"
+                ? "bg-[#0202ff] text-white shadow-sm"
                 : "text-[var(--ld-muted)] hover:text-[var(--ld-text)]"
             }`}
           >

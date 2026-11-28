@@ -32,7 +32,7 @@ export default function MyGoalsCard({ goals = [], kpis = [] }) {
   const footer = (
     <Link
       to="/my-performance"
-      className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--ld-accent)]"
+      className="inline-flex items-center gap-1 text-xs font-semibold text-[#0202ff]"
     >
       Open my performance <ChevronRight className="w-3 h-3" />
     </Link>
@@ -67,7 +67,7 @@ export default function MyGoalsCard({ goals = [], kpis = [] }) {
           </div>
           <div className="mt-2 h-1.5 rounded-full bg-[var(--ld-panel)] overflow-hidden">
             <div
-              className="h-full rounded-full bg-[var(--ld-accent)]"
+              className="h-full rounded-full bg-[#0202ff]"
               style={{ width: `${row.progress}%` }}
             />
           </div>

@@ -18,9 +18,9 @@ const KIND_ICON = {
 };
 
 const TONE_STYLE = {
-  overdue: "bg-rose-50 text-rose-600 dark:bg-rose-950/40",
-  due: "bg-amber-50 text-amber-600 dark:bg-amber-950/40",
-  open: "bg-sky-50 text-sky-600 dark:bg-sky-950/40",
+  overdue: "bg-red-50 text-red-600",
+  due: "bg-amber-50 text-amber-600",
+  open: "bg-[#0202ff]/10 text-[#0202ff]",
 };
 
 export default function AttentionList({ items = [], loading, emptyTitle, emptyHint }) {

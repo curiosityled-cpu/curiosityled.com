@@ -65,7 +65,7 @@ import OrgBusinessGoals from './pages/OrgBusinessGoals';
 import PerformanceManager from './pages/PerformanceManager';
 import Reviews from './pages/Reviews';
 import MyPerformance from './pages/MyPerformance';
-import MyRhythm from './pages/MyRhythm';
+import MyCheckins from './pages/MyCheckins';
 import ManagerToday from './pages/ManagerToday';
 import ManagerPatterns from './pages/ManagerPatterns';
 import ManagerGrowth from './pages/ManagerGrowth';
@@ -277,7 +277,8 @@ const AuthenticatedApp = () => {
       <Route path="/TenantCleanup" element={<PlatformAdminOnly><MVPPage><TenantCleanup /></MVPPage></PlatformAdminOnly>} />
       <Route path="/my-performance" element={<MVPPage><MyPerformance /></MVPPage>} />
       <Route path="/my-goals" element={<Navigate to="/my-performance" replace />} />
-      <Route path="/my-rhythm" element={<MVPPage><MyRhythm /></MVPPage>} />
+      <Route path="/my-checkins" element={<MVPPage><MyCheckins /></MVPPage>} />
+      <Route path="/my-rhythm" element={<Navigate to="/my-checkins" replace />} />
       <Route path="/teams-settings" element={<Navigate to="/Settings" replace />} />
       {/* Redirect /Performance to My Goals */}
       <Route path="/Performance" element={<Navigate to="/my-goals" replace />} />

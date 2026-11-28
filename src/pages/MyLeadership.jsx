@@ -394,7 +394,7 @@ function GoalsPulseCard({ goals }) {
 /** Explore deeper — links to full layers */
 function ExploreDeeperCard() {
   const links = [
-    { label: 'My leadership rhythm', sub: '7d/28d trends, daily check-in log, pattern insights', path: '/my-rhythm', icon: BarChart3, color: 'text-[#0202ff]' },
+    { label: 'My check-ins', sub: 'Daily check-in history — capture a day you missed', path: '/my-checkins', icon: BarChart3, color: 'text-[#0202ff]' },
     { label: 'Open full leadership profile', sub: 'Archetype, competencies, style', path: '/Insights', icon: Brain, color: 'text-purple-600' },
     { label: 'My development plan', sub: 'Journeys, learning, experiences', path: '/my-development', icon: Layers, color: 'text-blue-600' },
     { label: 'Goals & progress', sub: 'Active goals and milestones', path: '/my-goals', icon: Target, color: 'text-emerald-600' },
