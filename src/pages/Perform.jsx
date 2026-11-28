@@ -303,6 +303,29 @@ export default function Perform() {
         <ScopeSwitcher scopes={scopes} value={activeScope} onChange={chooseScope} />
 
         <div className="space-y-6">
+          <LeadSection label={contextLabel} description={contextDescription}>
+            {activeScope === "my" ? (
+              <OutcomeTiles tiles={myWeekTiles} />
+            ) : (
+              <PeopleList
+                people={people}
+                emptyTitle={
+                  activeScope === "team" ? "No one in your team yet" : "No individual records in scope"
+                }
+                emptyHint={
+                  activeScope === "team"
+                    ? "When people report to you, their goals and check-ins appear here."
+                    : "This scope shows organization-wide totals for now."
+                }
+                footer={
+                  activeScope === "team"
+                    ? { label: "Open the review cycle", to: "/reviews" }
+                    : { label: "Open Leadership Intelligence", to: "/Insights?tab=org" }
+                }
+              />
+            )}
+          </LeadSection>
+
           <div
             className={
               activeScope === "my" ? "grid items-start gap-6 lg:grid-cols-2" : "space-y-6"
@@ -333,29 +356,6 @@ export default function Perform() {
               )}
             </LeadSection>
           </div>
-
-          <LeadSection label={contextLabel} description={contextDescription}>
-            {activeScope === "my" ? (
-              <OutcomeTiles tiles={myWeekTiles} />
-            ) : (
-              <PeopleList
-                people={people}
-                emptyTitle={
-                  activeScope === "team" ? "No one in your team yet" : "No individual records in scope"
-                }
-                emptyHint={
-                  activeScope === "team"
-                    ? "When people report to you, their goals and check-ins appear here."
-                    : "This scope shows organization-wide totals for now."
-                }
-                footer={
-                  activeScope === "team"
-                    ? { label: "Open the review cycle", to: "/reviews" }
-                    : { label: "Open Leadership Intelligence", to: "/Insights?tab=org" }
-                }
-              />
-            )}
-          </LeadSection>
         </div>
       </div>
     </div>
