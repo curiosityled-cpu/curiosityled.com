@@ -299,8 +299,25 @@ export default function Perform() {
 
         <ScopeSwitcher scopes={scopes} value={activeScope} onChange={chooseScope} />
 
-        <div className="space-y-6">
-          {activeScope !== "my" && (
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <LeadSection label="Needs attention" description={attentionDescription} collapsible>
+            <AttentionList
+              items={items}
+              loading={loading}
+              emptyTitle={emptyTitle}
+              emptyHint={emptyHint}
+            />
+          </LeadSection>
+
+          {activeScope === "my" ? (
+            <LeadSection
+              label="Goals & outcomes"
+              collapsible
+              description="What you're working towards, and where it stands."
+            >
+              <MyGoalsCard goals={goals} kpis={kpis} />
+            </LeadSection>
+          ) : (
             <LeadSection label={contextLabel} description={contextDescription}>
               <PeopleList
                 people={people}
@@ -320,31 +337,6 @@ export default function Perform() {
               />
             </LeadSection>
           )}
-
-          <div
-            className={
-              activeScope === "my" ? "grid items-start gap-6 lg:grid-cols-2" : "space-y-6"
-            }
-          >
-            <LeadSection label="Needs attention" description={attentionDescription} collapsible>
-              <AttentionList
-                items={items}
-                loading={loading}
-                emptyTitle={emptyTitle}
-                emptyHint={emptyHint}
-              />
-            </LeadSection>
-
-            {activeScope === "my" && (
-              <LeadSection
-                label="Goals & outcomes"
-                collapsible
-                description="What you're working towards, and where it stands."
-              >
-                <MyGoalsCard goals={goals} kpis={kpis} />
-              </LeadSection>
-            )}
-          </div>
         </div>
       </div>
     </div>
