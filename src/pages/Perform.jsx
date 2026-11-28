@@ -17,6 +17,7 @@ import PerformHero from "@/components/perform/PerformHero";
 import ScopeSwitcher from "@/components/perform/ScopeSwitcher";
 import AttentionList from "@/components/perform/AttentionList";
 import MyGoalsCard from "@/components/perform/MyGoalsCard";
+import OrgGoalsCard from "@/components/perform/OrgGoalsCard";
 import PeopleList from "@/components/perform/PeopleList";
 import {
   todayKeyET,
@@ -173,6 +174,32 @@ export default function Perform() {
 
   const activeScope = scopes.some((s) => s.id === scope) ? scope : "my";
 
+  // ── Org-wide goals and OKRs (business goals the org steers by, OKRs for the period) ──
+  const { data: orgGoals = { businessGoals: [], okrs: [] } } = useQuery({
+    queryKey: ["perform-org-goals", activeClientId],
+    queryFn: async () => {
+      try {
+        const [businessGoals, okrs] = await Promise.all([
+          base44.entities.OrgBusinessGoal.filter(
+            { ...tenant, is_active: true },
+            "-created_date",
+            8
+          ),
+          base44.entities.Goal.filter(
+            { ...tenant, goal_type: "okr_objective", status: "active" },
+            "-updated_date",
+            8
+          ),
+        ]);
+        return { businessGoals, okrs };
+      } catch {
+        return { businessGoals: [], okrs: [] };
+      }
+    },
+    enabled: !!user?.email && activeScope === "org",
+    staleTime: 60_000,
+  });
+
   const loading = !user || reviewLoading || rollupLoading;
   const items = useMemo(() => {
     if (activeScope === "team") return buildTeamItems({ reviewData, todayKey });
@@ -318,24 +345,42 @@ export default function Perform() {
               <MyGoalsCard goals={goals} kpis={kpis} />
             </LeadSection>
           ) : (
-            <LeadSection label={contextLabel} description={contextDescription}>
-              <PeopleList
-                people={people}
-                emptyTitle={
-                  activeScope === "team" ? "No one in your team yet" : "No individual records in scope"
-                }
-                emptyHint={
-                  activeScope === "team"
-                    ? "When people report to you, their goals and check-ins appear here."
-                    : "This scope shows organization-wide totals for now."
-                }
-                footer={
-                  activeScope === "team"
-                    ? { label: "Open the review cycle", to: "/reviews" }
-                    : { label: "Open Leadership Intelligence", to: "/Insights?tab=org" }
-                }
-              />
-            </LeadSection>
+            <div className="space-y-6">
+              {activeScope === "org" && (
+                <LeadSection
+                  label="Goals & outcomes"
+                  collapsible
+                  description="The goals, OKRs and KPIs the organization is steering by."
+                >
+                  <OrgGoalsCard
+                    businessGoals={orgGoals.businessGoals}
+                    okrs={orgGoals.okrs}
+                    kpis={rollup?.aggregates?.kpis || []}
+                  />
+                </LeadSection>
+              )}
+
+              <LeadSection label={contextLabel} description={contextDescription}>
+                <PeopleList
+                  people={people}
+                  emptyTitle={
+                    activeScope === "team"
+                      ? "No one in your team yet"
+                      : "No individual records in scope"
+                  }
+                  emptyHint={
+                    activeScope === "team"
+                      ? "When people report to you, their goals and check-ins appear here."
+                      : "This scope shows organization-wide totals for now."
+                  }
+                  footer={
+                    activeScope === "team"
+                      ? { label: "Open the review cycle", to: "/reviews" }
+                      : { label: "Open Leadership Intelligence", to: "/Insights?tab=org" }
+                  }
+                />
+              </LeadSection>
+            </div>
           )}
         </div>
       </div>
